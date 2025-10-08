@@ -69,6 +69,8 @@ class TranscribableAdapter:
         return self.model.transcribe(audio_array, **kwargs)
 
 
+whisper_recognizer = None
+
 def recognize(
     recognizer,
     audio_data: AudioData,
@@ -97,12 +99,14 @@ def recognize(
     Other values are passed directly to whisper. See https://github.com/openai/whisper/blob/main/whisper/transcribe.py for all options.
     """
 
-    import whisper
+    global whisper_recognizer
+    if whisper_recognizer is None:
+        import whisper
+        whisper_model = whisper.load_model(model, **load_options or {})
+        whisper_recognizer = WhisperCompatibleRecognizer(
+            TranscribableAdapter(whisper_model)
+        )
 
-    whisper_model = whisper.load_model(model, **load_options or {})
-    whisper_recognizer = WhisperCompatibleRecognizer(
-        TranscribableAdapter(whisper_model)
-    )
     return whisper_recognizer.recognize(
         audio_data, show_dict=show_dict, **transcribe_options
     )
