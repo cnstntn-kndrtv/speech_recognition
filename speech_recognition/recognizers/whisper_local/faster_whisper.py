@@ -52,6 +52,8 @@ class TranscribeOptionalParameters(TypedDict, total=False):
     # TODO Add others
 
 
+whisper_recognizer = None
+
 def recognize(
     recognizer,
     audio_data: AudioData,
@@ -78,12 +80,16 @@ def recognize(
 
     Other values are passed directly to whisper. See https://github.com/SYSTRAN/faster-whisper/blob/master/faster_whisper/transcribe.py for all options.
     """
-    from faster_whisper import WhisperModel
+    
+    global whisper_recognizer
 
-    model = WhisperModel(model, **init_options or {})
-    whisper_recognizer = WhisperCompatibleRecognizer(
-        TranscribableAdapter(model)
-    )
+    if whisper_recognizer is None:
+        from faster_whisper import WhisperModel
+        model = WhisperModel(model, **init_options or {})
+        whisper_recognizer = WhisperCompatibleRecognizer(
+            TranscribableAdapter(model)
+        )
+
     return whisper_recognizer.recognize(
         audio_data, show_dict=show_dict, **transcribe_options
     )
